@@ -107,6 +107,42 @@
     color: var(--muted); letter-spacing: .03em;
   }
   footer a { color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--line-soft); }
+
+  /* --- Historique des prix --- */
+  .history { margin-top: 16px; border: 1px solid var(--line); padding: 20px; }
+  .history-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+  .history-head h2 {
+    font-size: 9.5px; margin: 0; font-weight: 400;
+    letter-spacing: .18em; text-transform: uppercase;
+  }
+  .history-head p { margin: 6px 0 0; font-size: 10px; color: var(--muted); letter-spacing: .02em; }
+  .tabs { display: inline-flex; flex: none; gap: 14px; }
+  .tabs button {
+    width: auto; margin: 0; padding: 0 0 4px; border: 0; border-bottom: 1px solid transparent;
+    border-radius: 0; background: none; color: var(--muted);
+    font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase;
+  }
+  .tabs button:hover:not(:disabled) { background: none; color: var(--ink); }
+  .tabs button.active { color: var(--ink); border-bottom-color: var(--ink); }
+  .history-stats {
+    display: flex; justify-content: space-between; gap: 12px; margin-top: 16px; padding-top: 12px;
+    border-top: 1px solid var(--line-soft); font-size: 10px; color: var(--muted);
+    letter-spacing: .02em;
+  }
+  .history-stats b { color: var(--ink); font-weight: 400; font-variant-numeric: tabular-nums; }
+  .chart-wrap { position: relative; margin-top: 10px; }
+  #chart { display: block; width: 100%; height: auto; overflow: visible; }
+  .chart-msg {
+    position: absolute; inset: 0; display: grid; place-items: center; padding: 0 16px;
+    text-align: center; font-size: 10px; line-height: 1.6; color: var(--muted);
+  }
+  .chart-note { margin: 8px 0 0; min-height: 12px; font-size: 9px; line-height: 1.6; color: var(--muted); }
+  .tooltip {
+    position: absolute; z-index: 2; transform: translate(-50%, -130%); pointer-events: none;
+    padding: 5px 8px; border: 1px solid var(--line); background: var(--paper);
+    font-size: 10px; white-space: nowrap; color: var(--muted);
+  }
+  .tooltip b { color: var(--ink); font-weight: 400; font-variant-numeric: tabular-nums; }
   .hidden { display: none; }
 </style>
 </head>
@@ -171,6 +207,29 @@
   </form>
 
   <p class="status" id="status" aria-live="polite">Initialisation…</p>
+
+  <section class="history hidden" id="history-card">
+    <div class="history-head">
+      <div>
+        <h2>Évolution des prix</h2>
+        <p id="history-sub">Moyenne nationale</p>
+      </div>
+      <div class="tabs" id="period-tabs">
+        <button type="button" data-period="day">1J</button>
+        <button type="button" data-period="week" class="active">1S</button>
+        <button type="button" data-period="year">1A</button>
+      </div>
+    </div>
+    <div class="history-stats">
+      <span>Actuel <b id="hist-last">—</b></span>
+      <span id="hist-change"></span>
+    </div>
+    <div class="chart-wrap">
+      <svg id="chart" viewBox="0 0 420 160" role="img" aria-label="Évolution du prix du carburant"></svg>
+      <div class="chart-msg" id="chart-msg">Chargement…</div>
+    </div>
+    <p class="chart-note" id="chart-note"></p>
+  </section>
 
   <footer>
     Prix moyens nationaux — données officielles
@@ -412,6 +471,281 @@
       setStatus('Prix estimés — téléchargement impossible.', true);
     });
   }
+
+  /* --------------------------- historique des prix ------------------------- */
+
+  var HISTORY_URL = 'history.json';
+  var HISTORY_CACHE_KEY = 'gastrack.history.v1';
+  var HISTORY_TTL = 6 * 60 * 60 * 1000;
+
+  var historyCard = document.getElementById('history-card');
+  var historySub = document.getElementById('history-sub');
+  var periodTabs = document.getElementById('period-tabs');
+  var histLast = document.getElementById('hist-last');
+  var histChange = document.getElementById('hist-change');
+  var chartEl = document.getElementById('chart');
+  var chartMsg = document.getElementById('chart-msg');
+  var chartNote = document.getElementById('chart-note');
+
+  var historyState = { data: null, period: 'week' };
+
+  var dayMonth = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' });
+  var monthName = new Intl.DateTimeFormat('fr-FR', { month: 'short' });
+  var hourLabel = new Intl.DateTimeFormat('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  var longDate = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+
+  function readHistoryCache() {
+    try {
+      var raw = localStorage.getItem(HISTORY_CACHE_KEY);
+      if (!raw) return null;
+      var payload = JSON.parse(raw);
+      if (!payload || !payload.data || !payload.t) return null;
+      if (Date.now() - payload.t > HISTORY_TTL) return null;
+      return payload.data;
+    } catch (err) {
+      return null;
+    }
+  }
+
+  function writeHistoryCache(data) {
+    try {
+      localStorage.setItem(HISTORY_CACHE_KEY, JSON.stringify({ t: Date.now(), data: data }));
+    } catch (err) { /* quota ou navigation privée */ }
+  }
+
+  async function loadHistory() {
+    var cached = readHistoryCache();
+    if (cached) {
+      historyState.data = cached;
+      revealHistory();
+      return;
+    }
+    try {
+      var response = await fetch(HISTORY_URL, { cache: 'no-store' });
+      if (!response.ok) throw new Error('HTTP ' + response.status);
+      var data = await response.json();
+      if (!data || !data.fuels) throw new Error('format inattendu');
+      historyState.data = data;
+      writeHistoryCache(data);
+      revealHistory();
+    } catch (err) {
+      historyCard.classList.add('hidden');   // pas d'historique : on n'affiche rien
+    }
+  }
+
+  function revealHistory() {
+    historyCard.classList.remove('hidden');
+    renderHistory();
+  }
+
+  function historyPoints(period, fuel) {
+    var data = historyState.data;
+    if (!data) return [];
+
+    if (period === 'day') {
+      var hourly = (data.hourly && data.hourly[fuel]) || {};
+      var stamps = Object.keys(hourly).sort();
+      if (!stamps.length) return [];
+      var lastDay = stamps[stamps.length - 1].slice(0, 10);
+      return stamps
+        .filter(function (stamp) { return stamp.slice(0, 10) === lastDay; })
+        .map(function (stamp) { return { t: new Date(stamp).getTime(), v: hourly[stamp] }; });
+    }
+
+    var daily = (data.fuels && data.fuels[fuel]) || {};
+    var days = Object.keys(daily).sort();
+    if (period === 'week') days = days.slice(-7);
+    return days.map(function (day) {
+      return { t: new Date(day + 'T00:00:00').getTime(), v: daily[day] };
+    });
+  }
+
+  function renderHistory() {
+    var fuel = document.getElementById('fuel').value;
+    var period = historyState.period;
+    var points = historyPoints(period, fuel);
+
+    chartEl.textContent = '';
+    var previous = document.querySelector('.chart-wrap .tooltip');
+    if (previous) previous.remove();
+
+    historySub.textContent = fuel + ' · ' +
+      (period === 'day' ? 'dernière journée relevée'
+        : period === 'week' ? '7 derniers jours' : '12 derniers mois');
+
+    histLast.textContent = '—';
+    histChange.textContent = '';
+
+    if (points.length < 2) {
+      chartMsg.style.display = 'grid';
+      chartMsg.textContent = 'Pas encore de relevés pour cette période.';
+      return;
+    }
+    chartMsg.style.display = 'none';
+
+    var lastValue = points[points.length - 1].v;
+    var firstValue = points[0].v;
+    histLast.textContent = cents.format(lastValue) + ' €/L';
+    if (firstValue) {
+      var delta = ((lastValue - firstValue) / firstValue) * 100;
+      histChange.textContent = (delta > 0 ? '▲ +' : delta < 0 ? '▼ −' : '') +
+        Math.abs(delta).toLocaleString('fr-FR', {
+          minimumFractionDigits: 2, maximumFractionDigits: 2
+        }) + ' %';
+    }
+
+    drawHistory(points, period);
+
+    var generated = historyState.data.generated ? new Date(historyState.data.generated) : null;
+    chartNote.textContent = (generated
+      ? 'Historique officiel, mis à jour le ' + longDate.format(generated)
+      : 'Historique officiel') +
+      (period === 'day' ? ' · relevés horaires' : ' · moyennes nationales');
+  }
+
+  function drawHistory(points, period) {
+    var W = 420;
+    var H = 160;
+    var pad = { top: 12, right: 6, bottom: 20, left: 38 };
+    var innerW = W - pad.left - pad.right;
+    var innerH = H - pad.top - pad.bottom;
+
+    var values = points.map(function (point) { return point.v; });
+    var min = Math.min.apply(null, values);
+    var max = Math.max.apply(null, values);
+    var spread = max - min;
+    var margin = spread > 0.002 ? spread * 0.18 : 0.02;
+    var lo = min - margin;
+    var hi = max + margin;
+
+    var first = points[0].t;
+    var last = points[points.length - 1].t;
+    var span = (last - first) || 1;
+    var x = function (t) { return pad.left + ((t - first) / span) * innerW; };
+    var y = function (v) { return pad.top + (1 - (v - lo) / (hi - lo)) * innerH; };
+
+    var css = getComputedStyle(document.documentElement);
+    var ink = css.getPropertyValue('--ink').trim() || '#111111';
+    var soft = css.getPropertyValue('--line-soft').trim() || '#e8e8e8';
+    var muted = css.getPropertyValue('--muted').trim() || '#6f6f6f';
+    var paper = css.getPropertyValue('--paper').trim() || '#ffffff';
+
+    function node(name, attrs) {
+      var element = document.createElementNS('http://www.w3.org/2000/svg', name);
+      Object.keys(attrs).forEach(function (key) { element.setAttribute(key, attrs[key]); });
+      return element;
+    }
+
+    for (var i = 0; i < 3; i++) {
+      var value = lo + ((hi - lo) * i) / 2;
+      var posY = y(value);
+      chartEl.appendChild(node('line', {
+        x1: pad.left, x2: W - pad.right, y1: posY, y2: posY,
+        stroke: soft, 'stroke-width': 1, 'stroke-dasharray': i === 1 ? '3 4' : '0'
+      }));
+      var tick = node('text', {
+        x: pad.left - 6, y: posY + 3, 'text-anchor': 'end', fill: muted, 'font-size': 8.5
+      });
+      tick.textContent = value.toFixed(2);
+      chartEl.appendChild(tick);
+    }
+
+    var linePath = points.map(function (point, index) {
+      return (index ? 'L' : 'M') + x(point.t).toFixed(1) + ' ' + y(point.v).toFixed(1);
+    }).join(' ');
+
+    var baseline = H - pad.bottom;
+    var areaPath = linePath + ' L' + x(last).toFixed(1) + ' ' + baseline +
+      ' L' + x(first).toFixed(1) + ' ' + baseline + ' Z';
+
+    chartEl.appendChild(node('path', { d: areaPath, fill: ink, 'fill-opacity': '0.05', stroke: 'none' }));
+    chartEl.appendChild(node('path', {
+      d: linePath, fill: 'none', stroke: ink, 'stroke-width': 2,
+      'stroke-linejoin': 'round', 'stroke-linecap': 'round'
+    }));
+    chartEl.appendChild(node('circle', {
+      cx: x(last), cy: y(values[values.length - 1]), r: 3,
+      fill: ink, stroke: paper, 'stroke-width': 1.5
+    }));
+
+    function tickLabel(stamp) {
+      var date = new Date(stamp);
+      if (period === 'day') return hourLabel.format(date);
+      if (period === 'week') return dayMonth.format(date);
+      return monthName.format(date);
+    }
+
+    [[first, 'start'], [first + span / 2, 'middle'], [last, 'end']].forEach(function (pair) {
+      var label = node('text', {
+        x: x(pair[0]), y: H - 6, 'text-anchor': pair[1], fill: muted, 'font-size': 8.5
+      });
+      label.textContent = tickLabel(pair[0]);
+      chartEl.appendChild(label);
+    });
+
+    var hoverLine = node('line', {
+      x1: 0, x2: 0, y1: pad.top, y2: baseline,
+      stroke: soft, 'stroke-width': 1, opacity: 0
+    });
+    var hoverDot = node('circle', {
+      r: 3.2, fill: ink, stroke: paper, 'stroke-width': 1.5, opacity: 0
+    });
+    chartEl.appendChild(hoverLine);
+    chartEl.appendChild(hoverDot);
+
+    var tooltip = document.createElement('div');
+    tooltip.className = 'tooltip';
+    tooltip.style.display = 'none';
+    document.querySelector('.chart-wrap').appendChild(tooltip);
+
+    chartEl.onpointermove = function (event) {
+      var rect = chartEl.getBoundingClientRect();
+      var cursor = ((event.clientX - rect.left) / rect.width) * W;
+      var nearest = points[0];
+      points.forEach(function (point) {
+        if (Math.abs(x(point.t) - cursor) < Math.abs(x(nearest.t) - cursor)) nearest = point;
+      });
+      var px = x(nearest.t);
+      var py = y(nearest.v);
+      hoverLine.setAttribute('x1', px);
+      hoverLine.setAttribute('x2', px);
+      hoverLine.setAttribute('opacity', 1);
+      hoverDot.setAttribute('cx', px);
+      hoverDot.setAttribute('cy', py);
+      hoverDot.setAttribute('opacity', 1);
+      tooltip.style.display = 'block';
+      tooltip.style.left = (px / W) * rect.width + 'px';
+      tooltip.style.top = (py / H) * rect.height + 'px';
+
+      var date = new Date(nearest.t);
+      var label = period === 'day'
+        ? dayMonth.format(date) + ' · ' + hourLabel.format(date)
+        : longDate.format(date);
+      tooltip.innerHTML = '<b>' + cents.format(nearest.v) + ' €/L</b> · ' + label;
+    };
+
+    chartEl.onpointerleave = function () {
+      hoverLine.setAttribute('opacity', 0);
+      hoverDot.setAttribute('opacity', 0);
+      tooltip.style.display = 'none';
+    };
+  }
+
+  periodTabs.addEventListener('click', function (event) {
+    var button = event.target.closest('button[data-period]');
+    if (!button || button.dataset.period === historyState.period) return;
+    historyState.period = button.dataset.period;
+    Array.prototype.forEach.call(periodTabs.querySelectorAll('button'), function (node) {
+      node.classList.toggle('active', node === button);
+    });
+    renderHistory();
+  });
+
+  document.getElementById('fuel').addEventListener('change', function () {
+    if (historyState.data) renderHistory();
+  });
+
+  loadHistory();
 })();
 </script>
 </body>
