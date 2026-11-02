@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>GasTrack — Coût de trajet</title>
+
+<!-- iOS : installation sur l'écran d'accueil -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="GasTrack">
+<meta name="theme-color" content="#ffffff">
+<meta name="format-detection" content="telephone=no">
+<link rel="apple-touch-icon" href="data:image/png;base64,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">
+<link rel="icon" href="data:image/png;base64,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">
+<link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22GasTrack%20%E2%80%94%20co%C3%BBt%20de%20trajet%22%2C%22short_name%22%3A%22GasTrack%22%2C%22display%22%3A%22standalone%22%2C%22start_url%22%3A%22%2F%22%2C%22background_color%22%3A%22%23ffffff%22%2C%22theme_color%22%3A%22%23ffffff%22%2C%22lang%22%3A%22fr%22%7D">
+
+<style>
+  :root {
+    --paper: #ffffff;
+    --ink: #111111;
+    --ink-soft: #333333;
+    --muted: #6f6f6f;
+    --line: #111111;
+    --line-soft: #e8e8e8;
+    --danger: #8f1d1d;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; min-height: 100vh; background: var(--paper); color: var(--ink);
+    font-family: "Helvetica Neue", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+    font-weight: 300; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+    padding: calc(28px + env(safe-area-inset-top)) 20px calc(24px + env(safe-area-inset-bottom));
+  }
+  .app { max-width: 480px; margin: 0 auto; }
+  header { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+  .logo {
+    width: 34px; height: 34px; flex: none; display: grid; place-items: center;
+    border: 1px solid var(--line);
+  }
+  .logo svg { width: 18px; height: 18px; display: block; }
+  h1 { font-size: 15px; margin: 0; font-weight: 400; letter-spacing: .22em; text-transform: uppercase; }
+  header p { margin: 4px 0 0; font-size: 11px; color: var(--muted); letter-spacing: .02em; }
+  .card { border: 1px solid var(--line); padding: 24px; background: var(--paper); }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .field { margin-bottom: 20px; }
+  label {
+    display: block; margin-bottom: 8px; font-size: 9.5px; font-weight: 400;
+    letter-spacing: .18em; text-transform: uppercase; color: var(--muted);
+  }
+  .input-wrap { position: relative; }
+  input, select {
+    width: 100%; padding: 6px 44px 8px 0; border: 0; border-bottom: 1px solid var(--line);
+    border-radius: 0; background: transparent; color: var(--ink);
+    font-family: inherit; font-size: 17px; font-weight: 300;
+    outline: none; appearance: none; -webkit-appearance: none;
+  }
+  select { padding-right: 26px; cursor: pointer; }
+  input:focus, select:focus { box-shadow: 0 1px 0 0 var(--ink); }
+  .unit {
+    position: absolute; right: 0; bottom: 10px; font-size: 9.5px; letter-spacing: .12em;
+    text-transform: uppercase; color: var(--muted); pointer-events: none;
+  }
+  .chev {
+    position: absolute; right: 1px; bottom: 11px; font-size: 8px; color: var(--ink);
+    pointer-events: none; transform: scaleY(.8);
+  }
+  button {
+    width: 100%; margin-top: 2px; padding: 15px; border: 1px solid var(--line);
+    border-radius: 0; background: var(--paper); color: var(--ink);
+    font-family: inherit; font-size: 10px; font-weight: 400; letter-spacing: .2em;
+    text-transform: uppercase; cursor: pointer; -webkit-tap-highlight-color: transparent;
+    transition: background .15s, color .15s;
+  }
+  button:hover:not(:disabled) { background: var(--ink); color: var(--paper); }
+  button:disabled { color: var(--muted); border-color: var(--line-soft); }
+  .result {
+    margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--line);
+  }
+  .result .label { font-size: 9.5px; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); }
+  .result .cost {
+    font-size: 54px; font-weight: 200; letter-spacing: -.02em; line-height: 1.05;
+    margin: 8px 0 6px; font-variant-numeric: tabular-nums;
+  }
+  .result .sub { font-size: 12px; color: var(--ink-soft); }
+  .result .sub b { font-weight: 400; color: var(--ink); }
+  .badge {
+    display: inline-flex; align-items: center; gap: 7px; margin-top: 12px;
+    font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted);
+  }
+  .dot { width: 4px; height: 4px; border-radius: 50%; background: var(--ink); }
+  .badge.warn { color: var(--ink); }
+  .badge.warn .dot { background: var(--danger); }
+  .error {
+    margin-top: 18px; padding: 12px 14px; font-size: 12.5px; color: var(--danger);
+    border: 1px solid var(--line-soft);
+  }
+  .status {
+    margin: 14px 2px 0; font-size: 10px; line-height: 1.6; color: var(--muted);
+    letter-spacing: .02em;
+  }
+  .status.warn { color: var(--danger); }
+  footer {
+    margin-top: 20px; text-align: center; font-size: 10px; line-height: 1.8;
+    color: var(--muted); letter-spacing: .03em;
+  }
+  footer a { color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--line-soft); }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="logo" aria-hidden="true">
+      <svg viewBox="0 0 20 20" fill="none" stroke="#111111" stroke-width="1.2">
+        <path d="M2 15 L6.5 9.5 L10 12 L14 5.5 L18 3.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="2" cy="15" r="1.1" fill="#111111" stroke="none"/>
+        <circle cx="18" cy="3.5" r="1.1" fill="#111111" stroke="none"/>
+      </svg>
+    </div>
+    <div>
+      <h1>GasTrack</h1>
+      <p>Coût du trajet au prix réel du carburant</p>
+    </div>
+  </header>
+
+  <form class="card" id="form" novalidate>
+    <div class="row">
+      <div class="field">
+        <label for="consumption">Consommation</label>
+        <div class="input-wrap">
+          <input id="consumption" type="number" inputmode="decimal" step="0.1" min="0.1" max="100" value="6.5" required>
+          <span class="unit">L/100km</span>
+        </div>
+      </div>
+      <div class="field">
+        <label for="distance">Distance</label>
+        <div class="input-wrap">
+          <input id="distance" type="number" inputmode="numeric" step="1" min="0" max="20000" value="50" required>
+          <span class="unit">km</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="fuel">Carburant</label>
+      <div class="input-wrap">
+        <select id="fuel">
+          <option value="Gazole" selected>Gazole (diesel)</option>
+          <option value="SP95">SP95</option>
+          <option value="SP98">SP98</option>
+          <option value="E10">E10 (SP95-E10)</option>
+          <option value="E85">E85 (bioéthanol)</option>
+        </select>
+        <span class="chev">▾</span>
+      </div>
+    </div>
+
+    <button type="submit" id="submit">Calculer</button>
+
+    <div class="result hidden" id="result" aria-live="polite">
+      <div class="label">Coût estimé</div>
+      <div class="cost" id="cost">—</div>
+      <div class="sub" id="detail"></div>
+      <div class="badge" id="badge"><span class="dot"></span><span id="badge-text"></span></div>
+    </div>
+
+    <div class="error hidden" id="error" role="alert"></div>
+  </form>
+
+  <p class="status" id="status" aria-live="polite">Initialisation…</p>
+
+  <footer>
+    Prix moyens nationaux — données officielles
+    <a href="https://www.prix-carburants.gouv.fr" target="_blank" rel="noopener">prix-carburants.gouv.fr</a><br>
+    Calcul effectué sur votre appareil · aucune donnée envoyée
+  </footer>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/fflate/umd/index.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  var PRICE_URL = 'https://donnees.roulez-eco.fr/opendata/instantane';
+  var CACHE_KEY = 'gastrack.prices.v2';
+  var CACHE_TTL = 30 * 60 * 1000;           // 30 minutes
+  var FFLATE_TIMEOUT = 8000;
+  var FUELS = ['Gazole', 'SP95', 'SP98', 'E10', 'E85'];
+  var FALLBACK = { Gazole: 2.29, SP95: 2.11, SP98: 2.25, E10: 2.19, E85: 0.95 };
+
+  var form = document.getElementById('form');
+  var submit = document.getElementById('submit');
+  var resultEl = document.getElementById('result');
+  var errorEl = document.getElementById('error');
+  var statusEl = document.getElementById('status');
+  var costEl = document.getElementById('cost');
+  var detailEl = document.getElementById('detail');
+  var badgeEl = document.getElementById('badge');
+  var badgeText = document.getElementById('badge-text');
+
+  var euro = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' });
+  var num = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 });
+  var cents = new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 3, maximumFractionDigits: 3 });
+  var clock = new Intl.DateTimeFormat('fr-FR', { hour: '2-digit', minute: '2-digit' });
+
+  var prices = null;      // { avg, count, t, source }
+  var inflight = null;
+
+  /* ------------------------------ utilitaires ------------------------------ */
+
+  function setStatus(text, warn) {
+    statusEl.textContent = text;
+    statusEl.classList.toggle('warn', !!warn);
+  }
+
+  function showError(message) {
+    errorEl.textContent = message;
+    errorEl.classList.remove('hidden');
+    resultEl.classList.add('hidden');
+  }
+
+  function hideError() {
+    errorEl.textContent = '';
+    errorEl.classList.add('hidden');
+  }
+
+  function readCache() {
+    try {
+      var raw = localStorage.getItem(CACHE_KEY);
+      if (!raw) return null;
+      var data = JSON.parse(raw);
+      if (!data || !data.avg || !data.t) return null;
+      if (Date.now() - data.t > CACHE_TTL) return null;
+      return data;
+    } catch (err) {
+      return null;   // Safari privé : localStorage indisponible
+    }
+  }
+
+  function writeCache(payload) {
+    try {
+      localStorage.setItem(CACHE_KEY, JSON.stringify(payload));
+    } catch (err) {
+      /* quota ou navigation privée : on continue sans cache */
+    }
+  }
+
+  function ensureFflate() {
+    return new Promise(function (resolve, reject) {
+      if (typeof window.fflate !== 'undefined') return resolve();
+      var started = Date.now();
+      var timer = setInterval(function () {
+        if (typeof window.fflate !== 'undefined') {
+          clearInterval(timer);
+          resolve();
+        } else if (Date.now() - started > FFLATE_TIMEOUT) {
+          clearInterval(timer);
+          reject(new Error('Bibliothèque de décompression indisponible.'));
+        }
+      }, 100);
+    });
+  }
+
+  /* --------------------------- récupération des prix ----------------------- */
+
+  async function fetchPrices() {
+    await ensureFflate();
+
+    // Le CDN officiel renvoie l'en-tête CORS sur les réponses fraîches, mais pas
+    // sur sa version en cache (constaté : GET nu = pas de CORS, GET avec
+    // paramètre = CORS présent). D'où ce cache-buster, indispensable pour que
+    // Safari autorise la lecture du ZIP.
+    var url = PRICE_URL + '?t=' + Date.now();
+    var response = await fetch(url, { cache: 'no-store' });
+    if (!response.ok) throw new Error('HTTP ' + response.status);
+
+    var buffer = new Uint8Array(await response.arrayBuffer());
+    var files = window.fflate.unzipSync(buffer);
+    var xmlName = Object.keys(files).filter(function (name) {
+      return /\.xml$/i.test(name);
+    })[0];
+    if (!xmlName) throw new Error('Fichier XML absent de l’archive');
+
+    // Le XML est déclaré en ISO-8859-1 : on décode explicitement les octets.
+    var xmlText = new TextDecoder('iso-8859-1').decode(files[xmlName]);
+    var doc = new DOMParser().parseFromString(xmlText, 'application/xml');
+    if (doc.getElementsByTagName('parsererror').length) throw new Error('XML illisible');
+
+    var nodes = doc.getElementsByTagName('prix');
+    var sums = {};
+    var counts = {};
+
+    for (var i = 0; i < nodes.length; i++) {
+      var fuel = nodes[i].getAttribute('nom');
+      if (FUELS.indexOf(fuel) === -1) continue;
+      var value = parseFloat((nodes[i].getAttribute('valeur') || '').replace(',', '.'));
+      if (!isFinite(value) || value <= 0) continue;   // 0.000 = prix absent
+      sums[fuel] = (sums[fuel] || 0) + value;
+      counts[fuel] = (counts[fuel] || 0) + 1;
+    }
+
+    var avg = {};
+    var count = {};
+    FUELS.forEach(function (fuel) {
+      if (counts[fuel]) {
+        avg[fuel] = Math.round((sums[fuel] / counts[fuel]) * 1000) / 1000;
+        count[fuel] = counts[fuel];
+      }
+    });
+    if (!Object.keys(avg).length) throw new Error('Aucun prix exploitable');
+
+    var payload = { t: Date.now(), avg: avg, count: count };
+    writeCache(payload);
+    return { avg: avg, count: count, t: payload.t, source: 'live' };
+  }
+
+  async function getPrices() {
+    if (prices) return prices;
+
+    var cached = readCache();
+    if (cached) {
+      prices = { avg: cached.avg, count: cached.count || {}, t: cached.t, source: 'cache' };
+      renderStatus();
+      return prices;
+    }
+
+    if (!inflight) {
+      setStatus('Téléchargement des prix officiels…');
+      inflight = (async function () {
+        try {
+          var data = await fetchPrices();
+          prices = data;
+          renderStatus();
+          return data;
+        } finally {
+          inflight = null;
+        }
+      })();
+    }
+    return inflight;
+  }
+
+  function renderStatus() {
+    if (!prices) return;
+    var label = prices.source === 'cache' ? 'Prix en cache' : 'Prix officiels';
+    var stations = prices.count && prices.count.Gazole ? num.format(prices.count.Gazole) + ' stations · ' : '';
+    setStatus(label + ' · ' + stations + 'mis à jour à ' + clock.format(new Date(prices.t)));
+  }
+
+  /* -------------------------------- calcul -------------------------------- */
+
+  form.addEventListener('submit', async function (event) {
+    event.preventDefault();
+    hideError();
+
+    var consumption = parseFloat(String(document.getElementById('consumption').value).replace(',', '.'));
+    var distance = parseFloat(String(document.getElementById('distance').value).replace(',', '.'));
+    var fuel = document.getElementById('fuel').value;
+
+    if (!isFinite(consumption) || consumption <= 0) {
+      showError('Renseigne une consommation valide (supérieure à 0).');
+      return;
+    }
+    if (!isFinite(distance) || distance < 0) {
+      showError('Renseigne une distance valide (0 ou plus).');
+      return;
+    }
+
+    submit.disabled = true;
+    submit.textContent = 'Calcul…';
+
+    var info;
+    try {
+      info = await getPrices();
+    } catch (err) {
+      info = { avg: FALLBACK, count: {}, t: Date.now(), source: 'fallback' };
+      setStatus('Prix estimés — téléchargement impossible.', true);
+    }
+
+    var unitPrice = info.avg[fuel] || FALLBACK[fuel];
+    var liters = (distance / 100) * consumption;
+    var cost = liters * unitPrice;
+
+    costEl.textContent = euro.format(cost);
+    detailEl.innerHTML = '<b>' + cents.format(unitPrice) + ' €/L</b> · ' +
+      num.format(liters) + ' L consommés';
+
+    badgeEl.classList.remove('warn');
+    if (info.source === 'fallback') {
+      badgeEl.classList.add('warn');
+      badgeText.textContent = 'Prix par défaut — réseau indisponible';
+    } else {
+      var stations = info.count && info.count[fuel] ? num.format(info.count[fuel]) + ' stations · ' : '';
+      badgeText.textContent = 'Moyenne nationale · ' + stations +
+        'maj ' + clock.format(new Date(info.t));
+    }
+
+    resultEl.classList.remove('hidden');
+    submit.disabled = false;
+    submit.textContent = 'Calculer';
+  });
+
+  /* ------------------------------ démarrage ------------------------------- */
+
+  if (readCache()) {
+    getPrices();   // instantané
+  } else {
+    getPrices().catch(function () {
+      setStatus('Prix estimés — téléchargement impossible.', true);
+    });
+  }
+})();
+</script>
+</body>
+</html>
+
+<!--
+  HÉBERGER CE FICHIER (2 minutes, gratuit) :
+  1. Renomme-le « index.html ».
+  2. Va sur https://app.netlify.com/drop et glisse le fichier dans la page.
+  3. Ouvre l'URL fournie dans Safari sur l'iPhone, puis Partager → « Sur l'écran d'accueil ».
+  Alternatives : Cloudflare Pages, GitHub Pages, Vercel.
+-->
