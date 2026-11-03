@@ -248,7 +248,121 @@
   .trip-stops .ts-saving.bad { color: #a12a2a; }
   .trip-note { margin: 9px 0 0; font-size: 9px; line-height: 1.6; color: var(--muted); }
   .hidden { display: none; }
+
+  /* --- actions d'en-tête --- */
+  .header-actions { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+  .icon-btn {
+    width: 30px; height: 30px; display: grid; place-items: center; padding: 0;
+    background: none; border: 1px solid var(--line-soft); color: var(--muted);
+    cursor: pointer; border-radius: 0;
+  }
+  .icon-btn svg { width: 16px; height: 16px; }
+  .icon-btn:hover { color: var(--ink); border-color: var(--line); }
+  .icon-sun { display: none; }
+  html[data-theme="dark"] .icon-moon { display: none; }
+  html[data-theme="dark"] .icon-sun { display: block; }
+
+  /* --- mode sombre --- */
+  html[data-theme="dark"] {
+    --paper: #0f1115;
+    --ink: #f1f1ef;
+    --ink-soft: #d8d8d4;
+    --muted: #9b9b97;
+    --line: #f1f1ef;
+    --line-soft: #2b2e34;
+    --danger: #e59b9b;
+    --card-veil: rgba(15, 17, 21, .88);
+    color-scheme: dark;
+  }
+  html[data-theme="dark"] .map { background: #15181d; }
+  html[data-theme="dark"] .st-gain.good { color: #7fd0a4; }
+  html[data-theme="dark"] .st-gain.bad { color: #e59b9b; }
+
+  /* --- image de fond --- */
+  :root { --card-veil: rgba(255, 255, 255, .9); }
+  body::before {
+    content: ''; position: fixed; inset: 0; z-index: 0;
+    background-image: var(--bg-image, none);
+    background-size: cover; background-position: center;
+    opacity: 0; transition: opacity .35s ease; pointer-events: none;
+  }
+  body.has-bg::before { opacity: .5; }
+  html[data-theme="dark"] body.has-bg::before { opacity: .32; }
+  .app { position: relative; z-index: 1; }
+  body.has-bg .card { background: var(--card-veil); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); }
+
+  /* --- carte unique stations / trajet --- */
+  .mode-card { margin-top: 16px; padding: 0 24px 24px; }
+  .mode-tabs {
+    display: flex; gap: 24px; margin: 0 -24px 18px; padding: 0 24px;
+    border-bottom: 1px solid var(--line);
+  }
+  .mode-tabs button {
+    width: auto; margin: 0; padding: 16px 0 13px; background: none;
+    border: 0; border-bottom: 1px solid transparent; border-radius: 0;
+    font-size: 9.5px; letter-spacing: .18em; text-transform: uppercase; color: var(--muted);
+  }
+  .mode-tabs button.active { color: var(--ink); border-bottom-color: var(--ink); }
+  .mode-card .nearby, .mode-card .trip { margin: 0; border: 0; padding: 0; }
+
+  /* --- historique des calculs --- */
+  .calc-history-wrap { margin-top: 20px; padding-top: 14px; border-top: 1px solid var(--line-soft); }
+  .calc-history {
+    display: flex; justify-content: flex-end; align-items: flex-end; gap: 8px;
+    overflow: hidden; min-height: 42px;
+    -webkit-mask-image: linear-gradient(to right, transparent 0, #000 40px, #000 100%);
+    mask-image: linear-gradient(to right, transparent 0, #000 40px, #000 100%);
+  }
+  .calc-history.is-sweeping { animation: strip-sweep .42s cubic-bezier(.22,.61,.36,1); }
+  .calc-chip {
+    flex: 0 0 auto; min-width: 68px; padding: 6px 9px; text-align: right;
+    border: 1px solid var(--line-soft); background: var(--paper);
+    transform: scale(var(--s, 1)); opacity: var(--o, 1); transform-origin: right bottom;
+    transition: transform .4s cubic-bezier(.22,.61,.36,1), opacity .4s ease;
+  }
+  .calc-chip b {
+    display: block; font-size: 12px; font-weight: 400;
+    font-variant-numeric: tabular-nums; white-space: nowrap;
+  }
+  .calc-chip span {
+    display: block; margin-top: 2px; font-size: 7.5px; letter-spacing: .07em;
+    text-transform: uppercase; color: var(--muted); white-space: nowrap;
+  }
+  .calc-chip.is-new .chip-inner { animation: chip-in .44s cubic-bezier(.22,.61,.36,1); }
+  @keyframes chip-in {
+    from { transform: translateX(18px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+  @keyframes strip-sweep {
+    from { transform: translateX(12px); }
+    to { transform: translateX(0); }
+  }
+
+  /* --- pied de page --- */
+  footer { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+  .footer-info { margin: 0; }
+  .ghost-btn {
+    display: inline-flex; align-items: center; gap: 8px; width: auto; margin: 0;
+    padding: 9px 14px; background: none; border: 1px solid var(--line-soft);
+    font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted);
+  }
+  .ghost-btn:hover { color: var(--ink); border-color: var(--line); }
+  .ghost-btn svg { width: 13px; height: 13px; }
+  .hidden { display: none !important; }
 </style>
+<script>
+  /* Thème avant le premier rendu : évite un flash blanc au chargement. */
+  (function () {
+    try {
+      var saved = localStorage.getItem('gastrack.mobile.theme.v1');
+      var dark = saved ? saved === 'dark'
+        : window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+    } catch (err) {
+      document.documentElement.dataset.theme = 'light';
+    }
+  })();
+</script>
 </head>
 <body>
 <div class="app">
@@ -264,26 +378,33 @@
       <h1>GasTrack <span class="edition">Mobile</span></h1>
       <p>Coût du trajet au prix réel du carburant</p>
     </div>
+    <div class="header-actions">
+      <input id="bg-input" type="file" accept="image/jpeg,image/png,image/webp,image/gif" class="hidden">
+      <button type="button" id="bg-btn" class="icon-btn" title="Choisir une image de fond" aria-label="Choisir une image de fond">
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.1">
+          <rect x="2.5" y="4" width="15" height="12"></rect>
+          <path d="M2.5 13l4-4 3.5 3.5 3-3 4.5 4.5" stroke-linejoin="round"></path>
+          <circle cx="7" cy="7.4" r="0.9" fill="currentColor" stroke="none"></circle>
+        </svg>
+      </button>
+      <button type="button" id="bg-reset" class="icon-btn hidden" title="Retirer l'image de fond" aria-label="Retirer l'image de fond">
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.2">
+          <path d="M6 6l8 8M14 6l-8 8" stroke-linecap="round"></path>
+        </svg>
+      </button>
+      <button type="button" id="theme-btn" class="icon-btn" title="Mode sombre" aria-label="Basculer le thème">
+        <svg class="icon-moon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.2">
+          <path d="M16 12.5A7 7 0 0 1 7.5 4a7 7 0 1 0 8.5 8.5Z" stroke-linejoin="round"></path>
+        </svg>
+        <svg class="icon-sun" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.2">
+          <circle cx="10" cy="10" r="3.6"></circle>
+          <path d="M10 2.2v1.8M10 16v1.8M2.2 10H4M16 10h1.8M4.7 4.7L6 6M14 14l1.3 1.3M15.3 4.7L14 6M6 14l-1.3 1.3" stroke-linecap="round"></path>
+        </svg>
+      </button>
+    </div>
   </header>
 
-  <section class="card settings">
-    <div class="settings-head">
-      <h2>Paramètres</h2>
-      <button type="button" id="reset-data" class="link-btn">Effacer mes données</button>
-    </div>
-    <div class="settings-row">
-      <div class="field">
-        <label for="tank">Réservoir</label>
-        <div class="input-wrap">
-          <input id="tank" type="number" inputmode="decimal" step="1" min="5" max="200" value="50">
-          <span class="unit">litres</span>
-        </div>
-      </div>
-      <p class="settings-note">
-        Vos réglages restent dans ce navigateur. Aucun compte, aucune donnée envoyée.
-      </p>
-    </div>
-  </section>
+  <p class="status" id="status" aria-live="polite">Initialisation…</p>
 
   <form class="card" id="form" novalidate>
     <div class="row">
@@ -303,17 +424,26 @@
       </div>
     </div>
 
-    <div class="field">
-      <label for="fuel">Carburant</label>
-      <div class="input-wrap">
-        <select id="fuel">
-          <option value="Gazole" selected>Gazole (diesel)</option>
-          <option value="SP95">SP95</option>
-          <option value="SP98">SP98</option>
-          <option value="E10">E10 (SP95-E10)</option>
-          <option value="E85">E85 (bioéthanol)</option>
-        </select>
-        <span class="chev">▾</span>
+    <div class="row">
+      <div class="field">
+        <label for="tank">Réservoir</label>
+        <div class="input-wrap">
+          <input id="tank" type="number" inputmode="decimal" step="1" min="5" max="200" value="50">
+          <span class="unit">litres</span>
+        </div>
+      </div>
+      <div class="field">
+        <label for="fuel">Carburant</label>
+        <div class="input-wrap">
+          <select id="fuel">
+            <option value="Gazole" selected>Gazole (diesel)</option>
+            <option value="SP95">SP95</option>
+            <option value="SP98">SP98</option>
+            <option value="E10">E10 (SP95-E10)</option>
+            <option value="E85">E85 (bioéthanol)</option>
+          </select>
+          <span class="chev">▾</span>
+        </div>
       </div>
     </div>
 
@@ -327,38 +457,24 @@
     </div>
 
     <div class="error hidden" id="error" role="alert"></div>
+
+    <div class="calc-history-wrap hidden" id="calc-history-wrap">
+      <div class="calc-history" id="calc-history" aria-live="polite"
+           aria-label="Calculs précédents"></div>
+    </div>
   </form>
 
-  <p class="status" id="status" aria-live="polite">Initialisation…</p>
 
-  <section class="history hidden" id="history-card">
-    <div class="history-head">
-      <div>
-        <h2>Évolution des prix</h2>
-        <p id="history-sub">Moyenne nationale</p>
-      </div>
-      <div class="tabs" id="period-tabs">
-        <button type="button" data-period="day">1J</button>
-        <button type="button" data-period="week" class="active">1S</button>
-        <button type="button" data-period="year">1A</button>
-      </div>
+  <section class="card mode-card" id="mode-card">
+    <div class="mode-tabs" id="view-tabs" role="tablist" aria-label="Stations ou trajet">
+      <button type="button" role="tab" data-view="stations" class="active" aria-selected="true">Stations</button>
+      <button type="button" role="tab" data-view="trip" aria-selected="false">Mode trajet</button>
     </div>
-    <div class="history-stats">
-      <span>Actuel <b id="hist-last">—</b></span>
-      <span id="hist-change"></span>
-    </div>
-    <div class="chart-wrap">
-      <svg id="chart" viewBox="0 0 420 160" role="img" aria-label="Évolution du prix du carburant"></svg>
-      <div class="chart-msg" id="chart-msg">Chargement…</div>
-    </div>
-    <p class="chart-note" id="chart-note"></p>
-  </section>
 
-  <section class="nearby" id="nearby-card">
+  <div class="view" id="nearby-card">
     <div class="nearby-head">
       <div>
-        <h2>Stations autour de moi</h2>
-        <p>Autorise la localisation pour comparer les prix près de toi</p>
+          <p>Autorise la localisation pour comparer les prix près de toi</p>
       </div>
       <label class="sort">Trier par
         <select id="sort">
@@ -374,10 +490,9 @@
     <div id="map" class="map hidden"></div>
     <ol class="stations" id="stations"></ol>
     <p class="nearby-note" id="nearby-note"></p>
-  </section>
+  </div>
 
-  <section class="trip" id="trip-card">
-    <h2>Mode trajet</h2>
+  <div class="view hidden" id="trip-card">
     <p class="trip-sub">Les arrêts les moins chers selon votre autonomie</p>
 
     <form id="trip-form" novalidate>
@@ -409,12 +524,45 @@
       <ol class="trip-stops" id="trip-stops"></ol>
       <p class="trip-note" id="trip-note"></p>
     </div>
+  </div>
+  </section>
+
+  <section class="history hidden" id="history-card">
+    <div class="history-head">
+      <div>
+        <h2>Évolution des prix</h2>
+        <p id="history-sub">Moyenne nationale</p>
+      </div>
+      <div class="tabs" id="period-tabs">
+        <button type="button" data-period="day">1J</button>
+        <button type="button" data-period="week" class="active">1S</button>
+        <button type="button" data-period="year">1A</button>
+      </div>
+    </div>
+    <div class="history-stats">
+      <span>Actuel <b id="hist-last">—</b></span>
+      <span id="hist-change"></span>
+    </div>
+    <div class="chart-wrap">
+      <svg id="chart" viewBox="0 0 420 160" role="img" aria-label="Évolution du prix du carburant"></svg>
+      <div class="chart-msg" id="chart-msg">Chargement…</div>
+    </div>
+    <p class="chart-note" id="chart-note"></p>
   </section>
 
   <footer>
-    Prix moyens nationaux — données officielles
-    <a href="https://www.prix-carburants.gouv.fr" target="_blank" rel="noopener">prix-carburants.gouv.fr</a><br>
-    Calcul effectué sur votre appareil · aucune donnée envoyée
+    <p class="footer-info">
+      Prix moyens nationaux — données officielles
+      <a href="https://www.prix-carburants.gouv.fr" target="_blank" rel="noopener">prix-carburants.gouv.fr</a><br>
+      Calcul effectué sur votre appareil · réglages et calculs conservés dans ce navigateur
+    </p>
+    <button type="button" id="reset-data" class="ghost-btn" title="Effacer mes données locales">
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.1" aria-hidden="true">
+        <path d="M3.5 5.5h13M8 5.5V3.6h4v1.9M5.6 5.5l.74 10.4h7.32l.74-10.4" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M8.2 8.4v4.8M11.8 8.4v4.8" stroke-linecap="round"/>
+      </svg>
+      Effacer mes données
+    </button>
   </footer>
 </div>
 
@@ -738,9 +886,207 @@
     }
 
     resultEl.classList.remove('hidden');
+    rememberCalculation({
+      cost: cost,
+      fuel: fuel,
+      km: distance,
+      consumption: consumption,
+      price: unitPrice,
+      liters: liters,
+      t: Date.now()
+    });
     submit.disabled = false;
     submit.textContent = 'Calculer';
   });
+
+  /* ------------------------------- thème -------------------------------- */
+
+  var THEME_KEY = 'gastrack.mobile.theme.v1';
+
+  function applyTheme(theme) {
+    document.documentElement.dataset.theme = theme;
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', theme === 'dark' ? '#0f1115' : '#ffffff');
+    try { localStorage.setItem(THEME_KEY, theme); } catch (err) { /* stockage bloqué */ }
+  }
+
+  function initTheme() {
+    var current = document.documentElement.dataset.theme;
+    applyTheme(current === 'dark' ? 'dark' : 'light');
+  }
+
+  document.getElementById('theme-btn').addEventListener('click', function () {
+    applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+  });
+
+  /* --------------------------- image de fond ----------------------------- */
+
+  var BG_KEY = 'gastrack.mobile.bg.v1';
+  var MAX_BG_SIDE = 1400;
+
+  var bgInput = document.getElementById('bg-input');
+  var bgBtn = document.getElementById('bg-btn');
+  var bgReset = document.getElementById('bg-reset');
+
+  function applyBackground(dataUrl) {
+    if (dataUrl) {
+      document.body.style.setProperty('--bg-image', 'url("' + dataUrl + '")');
+      document.body.classList.add('has-bg');
+      bgReset.classList.remove('hidden');
+    } else {
+      document.body.style.removeProperty('--bg-image');
+      document.body.classList.remove('has-bg');
+      bgReset.classList.add('hidden');
+    }
+  }
+
+  function loadBackground() {
+    try {
+      var saved = localStorage.getItem(BG_KEY);
+      if (saved) applyBackground(saved);
+    } catch (err) { /* stockage bloqué */ }
+  }
+
+  bgBtn.addEventListener('click', function () { bgInput.click(); });
+
+  bgInput.addEventListener('change', function () {
+    var file = bgInput.files && bgInput.files[0];
+    if (!file) return;
+    if (file.type.indexOf('image/') !== 0) {
+      window.alert('Choisissez une image (JPEG, PNG, WebP).');
+      return;
+    }
+
+    var reader = new FileReader();
+    reader.onload = function () {
+      var image = new Image();
+      image.onload = function () {
+        // Redimensionnement + JPEG : garde l'image sous le quota de localStorage.
+        var scale = Math.min(1, MAX_BG_SIDE / Math.max(image.width, image.height));
+        var canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, Math.round(image.width * scale));
+        canvas.height = Math.max(1, Math.round(image.height * scale));
+        canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
+        var dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+        try {
+          localStorage.setItem(BG_KEY, dataUrl);
+          applyBackground(dataUrl);
+        } catch (err) {
+          window.alert('Image trop lourde pour ce navigateur. Essayez une image plus petite.');
+        }
+        bgInput.value = '';
+      };
+      image.onerror = function () { window.alert('Image illisible.'); };
+      image.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  bgReset.addEventListener('click', function () {
+    try { localStorage.removeItem(BG_KEY); } catch (err) { /* stockage bloqué */ }
+    applyBackground(null);
+  });
+
+  /* --------------------------- historique des calculs --------------------- */
+
+  var CALC_KEY = 'gastrack.mobile.calc.v1';
+  var CALC_MAX = 12;
+  var CALC_SHOWN = 7;
+
+  function readCalculations() {
+    try {
+      var raw = localStorage.getItem(CALC_KEY);
+      var list = raw ? JSON.parse(raw) : [];
+      return Array.isArray(list) ? list.slice(-CALC_MAX) : [];
+    } catch (err) {
+      return [];
+    }
+  }
+
+  function writeCalculations(list) {
+    try {
+      localStorage.setItem(CALC_KEY, JSON.stringify(list.slice(-CALC_MAX)));
+    } catch (err) { /* quota ou navigation privée */ }
+  }
+
+  /* Le plus récent entre par la droite ; les anciens reculent vers la gauche,
+     réduisent et s'estompent dans le masque dégradé. */
+  function renderCalcHistory(animateNew) {
+    var strip = document.getElementById('calc-history');
+    var wrap = document.getElementById('calc-history-wrap');
+    var shown = readCalculations().slice(-CALC_SHOWN);
+
+    strip.innerHTML = '';
+    if (!shown.length) {
+      wrap.classList.add('hidden');
+      return;
+    }
+    wrap.classList.remove('hidden');
+
+    shown.forEach(function (entry, index) {
+      var age = shown.length - 1 - index;
+      var chip = document.createElement('div');
+      chip.className = 'calc-chip' + (animateNew && age === 0 ? ' is-new' : '');
+      chip.style.setProperty('--s', String(Math.max(0.74, 1 - age * 0.05)));
+      chip.style.setProperty('--o', String(Math.max(0.22, 1 - age * 0.16)));
+      chip.title = entry.fuel + ' · ' + num.format(entry.km) + ' km · ' +
+        num.format(entry.consumption) + ' L/100 km · ' + cents.format(entry.price) + ' €/L';
+
+      var inner = document.createElement('div');
+      inner.className = 'chip-inner';
+      var cost = document.createElement('b');
+      cost.textContent = euro.format(entry.cost);
+      var meta = document.createElement('span');
+      meta.textContent = entry.fuel + ' · ' + num.format(entry.km) + ' km';
+      inner.append(cost, meta);
+      chip.appendChild(inner);
+      strip.appendChild(chip);
+    });
+
+    if (animateNew) {
+      strip.classList.remove('is-sweeping');
+      void strip.offsetWidth;
+      strip.classList.add('is-sweeping');
+    }
+  }
+
+  function rememberCalculation(entry) {
+    var list = readCalculations();
+    list.push(entry);
+    writeCalculations(list);
+    renderCalcHistory(true);
+  }
+
+  /* --------------------------- onglets stations / trajet ------------------ */
+
+  var viewTabs = document.getElementById('view-tabs');
+  var viewPanels = {
+    stations: document.getElementById('nearby-card'),
+    trip: document.getElementById('trip-card')
+  };
+
+  viewTabs.addEventListener('click', function (event) {
+    var button = event.target.closest('button[data-view]');
+    if (!button || button.classList.contains('active')) return;
+    var target = button.dataset.view;
+
+    Array.prototype.forEach.call(viewTabs.querySelectorAll('button'), function (node) {
+      var active = node === button;
+      node.classList.toggle('active', active);
+      node.setAttribute('aria-selected', active ? 'true' : 'false');
+    });
+
+    Object.keys(viewPanels).forEach(function (key) {
+      viewPanels[key].classList.toggle('hidden', key !== target);
+    });
+
+    if (target === 'stations' && nearbyState.map) nearbyState.map.invalidateSize();
+    if (target === 'trip' && tripState.map) tripState.map.invalidateSize();
+  });
+
+  initTheme();
+  loadBackground();
+  renderCalcHistory(false);
 
   /* ------------------------------ démarrage ------------------------------- */
 
@@ -1399,6 +1745,12 @@
       var reachable = candidates.filter(function (candidate) {
         return candidate.along > position + 0.5 && candidate.along <= position + range * 0.98;
       });
+      // Évite de s'arrêter juste après le départ avec un réservoir encore plein :
+      // on privilégie la seconde moitié de l'autonomie, sauf station introuvable.
+      var later = reachable.filter(function (candidate) {
+        return candidate.along >= position + range * 0.5;
+      });
+      if (later.length) reachable = later;
       if (!reachable.length) { feasible = false; break; }
       var bestStop = reachable.reduce(function (a, b) { return b.price < a.price ? b : a; });
       stops.push(bestStop);
